@@ -5,13 +5,11 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
 func Test_generateCmd_generateMatrix(t *testing.T) {
-	dateAdded, _ := time.Parse("2006-01-02", "2018-01-01")
 
 	type fields struct {
 		retags []Retag
@@ -33,22 +31,17 @@ func Test_generateCmd_generateMatrix(t *testing.T) {
 			fields: fields{
 				retags: []Retag{
 					{
-						Source:         "source/test_repo-hello.123",
-						Destination:    "unlisted/destination/test_repo-hello.123",
-						DateAdded:      dateAdded,
-						Tags:           []string{"tag1", "tag2"},
-						EnableTimeBomb: true,
+						Source:      "source/test_repo-hello.123",
+						Destination: "unlisted/destination/test_repo-hello.123",
+						Tags:        []string{"tag1", "tag2"},
 					},
 				},
 			},
 			want: map[string]map[string]string{
 				"source_test_repo_hello_123_unlisted": {
-					"source":          "source/test_repo-hello.123",
-					"destination":     "unlisted/destination/test_repo-hello.123",
-					"date_added":      "2018-01-01",
-					"tags":            "tag1,tag2",
-					"enable_timebomb": "true",
-					"tool":            "az",
+					"source":      "source/test_repo-hello.123",
+					"destination": "unlisted/destination/test_repo-hello.123",
+					"tags":        "tag1,tag2",
 				},
 			},
 		},
@@ -57,37 +50,27 @@ func Test_generateCmd_generateMatrix(t *testing.T) {
 			fields: fields{
 				retags: []Retag{
 					{
-						Source:         "source/test_repo-hello.123",
-						Destination:    "unlisted/destination/test_repo-hello.123",
-						DateAdded:      dateAdded,
-						Tags:           []string{"tag1", "tag2"},
-						EnableTimeBomb: true,
+						Source:      "source/test_repo-hello.123",
+						Destination: "unlisted/destination/test_repo-hello.123",
+						Tags:        []string{"tag1", "tag2"},
 					},
 					{
-						Source:         "source/test_repo-hello.456",
-						Destination:    "public/destination/test_repo-hello.456",
-						DateAdded:      dateAdded,
-						Tags:           []string{"tag3", "tag4"},
-						EnableTimeBomb: false,
+						Source:      "source/test_repo-hello.456",
+						Destination: "public/destination/test_repo-hello.456",
+						Tags:        []string{"tag3", "tag4"},
 					},
 				},
 			},
 			want: map[string]map[string]string{
 				"source_test_repo_hello_123_unlisted": {
-					"source":          "source/test_repo-hello.123",
-					"destination":     "unlisted/destination/test_repo-hello.123",
-					"date_added":      "2018-01-01",
-					"tags":            "tag1,tag2",
-					"enable_timebomb": "true",
-					"tool":            "az",
+					"source":      "source/test_repo-hello.123",
+					"destination": "unlisted/destination/test_repo-hello.123",
+					"tags":        "tag1,tag2",
 				},
 				"source_test_repo_hello_456_public": {
-					"source":          "source/test_repo-hello.456",
-					"destination":     "public/destination/test_repo-hello.456",
-					"date_added":      "2018-01-01",
-					"tags":            "tag3,tag4",
-					"enable_timebomb": "false",
-					"tool":            "az",
+					"source":      "source/test_repo-hello.456",
+					"destination": "public/destination/test_repo-hello.456",
+					"tags":        "tag3,tag4",
 				},
 			},
 		},
@@ -113,63 +96,39 @@ func Test_parse(t *testing.T) {
 	}{
 		{
 			name: "valid config",
-			file: "mirror.yaml",
+			file: "retag.yml",
 			want: []Retag{
 				{
-					Source:         "gcr.io/distroless/static",
-					Destination:    "unlisted/mirror/gcr/distroless/static",
-					Tags:           []string{"debug", "latest", "nonroot"},
-					EnableTimeBomb: false,
+					Source:      "docker.io/library/alpine",
+					Destination: "mirror/docker.io/library/alpine",
+					Tags:        []string{"3.13", "3.14", "3.15", "3.16"},
 				},
-			},
-		},
-		{
-			name: "mirror config with oras",
-			file: "mirror-oras.yaml",
-			want: []Retag{
 				{
-					Source:         "nvcr.io/nvidia/tritonserver",
-					Destination:    "unlisted/mirror/nvcr/nvidia/tritonserver",
-					Tags:           []string{"22.05-py3", "22.05-py3-min"},
-					EnableTimeBomb: false,
-					Tool:           "oras",
-				},
-			},
-		},
-		{
-			name: "mirror config with timebomb",
-			file: "mirror-timebomb.yaml",
-			want: []Retag{
-				{
-					Source:         "docker.io/library/postgres",
-					Destination:    "public/oss/mirror/docker.io/library/postgres",
-					DateAdded:      time.Date(2019, 1, 19, 0, 0, 0, 0, time.UTC),
-					Tags:           []string{"12.9-bullseye"},
-					EnableTimeBomb: true,
+					Source:      "docker.io/library/rust",
+					Destination: "mirror/docker.io/library/rust",
+					Tags:        []string{"1.64", "1.64-slim"},
 				},
 			},
 		},
 		{
 			name:    "config with no tags is an error",
-			file:    "mirror-no-tags.yaml",
+			file:    "no-tags.yml",
 			wantErr: true,
 		},
 		{
 			name:    "config with no source is an error",
-			file:    "mirror-no-source.yaml",
-			wantErr: true,
-		},
-		{
-			name:    "invalid config",
-			file:    "invalid.yaml",
+			file:    "no-source.yml",
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			filebytes, err := os.ReadFile(filepath.Join("testdata", tt.file))
+			gc := generateCmd{
+				prefix: "mirror",
+			}
 			require.NoError(t, err)
-			got, err := parse(filebytes)
+			got, err := gc.parse(filebytes)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parse() error = %v, wantErr %v", err, tt.wantErr)
 				return

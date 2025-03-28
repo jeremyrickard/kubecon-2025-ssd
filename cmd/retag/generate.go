@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -19,34 +17,20 @@ const (
 This allows us to spawn a retag job per repository allowing us to scale the retag workflow horizontally`
 )
 
-type MCRConfig struct {
-	Registry string `yaml:"registry"`
-	Repos    []Repo `yaml:"repos"`
-}
-
-type Repo struct {
-	Name            string           `yaml:"name"`
-	DisplayName     string           `yaml:"displayName"`
-	Description     string           `yaml:"description"`
-	PublisherConfig *PublisherConfig `yaml:"publisherConfiguration"`
-}
-
-type PublisherConfig struct {
-	RetagConfig Retag `yaml:"azcu"`
+type RetagConfig struct {
+	Images []Retag `yaml:"images"`
 }
 
 type Retag struct {
-	Source         string    `yaml:"source"`
-	Destination    string    `yaml:"destination"`
-	DateAdded      time.Time `yaml:"date_added"`
-	Tags           []string  `yaml:"tags"`
-	Tool           string    `yaml:"tool"`
-	EnableTimeBomb bool      `yaml:"enable_timebomb"`
+	Source      string   `yaml:"source"`
+	Destination string   `yaml:"destination"`
+	Tags        []string `yaml:"tags"`
 }
 
 type generateCmd struct {
 	configFile []string
 	retags     []Retag
+	prefix     string
 }
 
 func newGenerateCommand() *cobra.Command {
@@ -61,7 +45,7 @@ func newGenerateCommand() *cobra.Command {
 
 	f := generateCmd.Flags()
 	f.StringSliceVarP(&gc.configFile, "config", "c", []string{"retag.yml"}, "Configuration used to map source repository to desination and the tags to import")
-
+	f.StringVarP(&gc.prefix, "prefix", "p", "mirror", "prefix to use for mapping")
 	_ = generateCmd.MarkFlagRequired("config")
 	return generateCmd
 }
@@ -69,12 +53,12 @@ func newGenerateCommand() *cobra.Command {
 func (gc *generateCmd) validate(_ *cobra.Command, _ []string) error {
 	var retags []Retag
 	for _, configFile := range gc.configFile {
-		data, err := load(configFile)
+		data, err := gc.load(configFile)
 		if err != nil {
 			return err
 		}
 
-		rts, err := parse(data)
+		rts, err := gc.parse(data)
 		if err != nil {
 			return err
 		}
@@ -100,17 +84,10 @@ func (gc *generateCmd) generateMatrix() map[string]map[string]string {
 	matrix := make(map[string]map[string]string)
 	for _, retag := range gc.retags {
 		retag := retag
-		tool := retag.Tool
-		if tool == "" {
-			tool = "az"
-		}
 		matrix[sanitizeJobName(&retag)] = map[string]string{
-			"source":          retag.Source,
-			"destination":     retag.Destination,
-			"date_added":      retag.DateAdded.Format("2006-01-02"),
-			"tags":            strings.Join(retag.Tags, ","),
-			"tool":            tool,
-			"enable_timebomb": strconv.FormatBool(retag.EnableTimeBomb),
+			"source":      retag.Source,
+			"destination": retag.Destination,
+			"tags":        strings.Join(retag.Tags, ","),
 		}
 	}
 
@@ -118,7 +95,7 @@ func (gc *generateCmd) generateMatrix() map[string]map[string]string {
 }
 
 // load reads the contents of a file and returns the bytes.
-func load(file string) ([]byte, error) {
+func (gc *generateCmd) load(file string) ([]byte, error) {
 	filebytes, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
@@ -127,25 +104,23 @@ func load(file string) ([]byte, error) {
 }
 
 // parse parses the yaml data and returns a list of retags.
-func parse(filebytes []byte) ([]Retag, error) {
-	var config MCRConfig
+func (gc *generateCmd) parse(filebytes []byte) ([]Retag, error) {
+	var config RetagConfig
 	err := yaml.Unmarshal(filebytes, &config)
 	if err != nil {
 		return nil, err
 	}
 
 	var rts []Retag
-	for _, repo := range config.Repos {
-		if repo.PublisherConfig == nil {
-			return nil, fmt.Errorf("missing retag config for %s", repo.Name)
-		}
-		retagConfig := repo.PublisherConfig.RetagConfig
+	for _, retagConfig := range config.Images {
 		if retagConfig.Source == "" {
-			return nil, fmt.Errorf("source is required for retagging into %s", retagConfig.Source)
-		}
-		retagConfig.Destination = repo.Name
-		if len(retagConfig.Tags) < 1 {
 			return nil, fmt.Errorf("at least one tag is required for retagging %s", retagConfig.Source)
+		} else if len(retagConfig.Tags) < 1 {
+			return nil, fmt.Errorf("at least one tag is required for retagging %s", retagConfig.Source)
+		}
+
+		if retagConfig.Destination == "" {
+			retagConfig.Destination = fmt.Sprintf("%s/%s", gc.prefix, retagConfig.Source)
 		}
 		rts = append(rts, retagConfig)
 	}
