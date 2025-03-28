@@ -12,4 +12,9 @@ jobs:
       - name: Build Retag Command
         run: |
           sudo GOBIN=/usr/local/bin go install
+      - name: Generate Retag Matrix
+        id: generate-matrix
+        run: |
+          matrix=$(kubecon-2025-ssd retag generate -c retag.yml)
+          echo $matrix
       
