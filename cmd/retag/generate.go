@@ -19,15 +19,22 @@ This allows us to spawn a retag job per repository allowing us to scale the reta
 
 type RetagMatrix map[string][]Retag
 
-type RetagConfig struct {
-	Images []Retag `yaml:"images"`
+type Retags struct {
+	Images []RetagConfig `yaml:"images"`
 }
 
-type Retag struct {
+type RetagConfig struct {
 	Name        string   `yaml:"name"`
 	Source      string   `yaml:"source"`
 	Destination string   `yaml:"destination"`
 	Tags        []string `yaml:"tags"`
+}
+
+type Retag struct {
+	Name        string `yaml:"name"`
+	Source      string `yaml:"source"`
+	Destination string `yaml:"destination"`
+	Tag         string `yaml:"tag"`
 }
 
 type generateCmd struct {
@@ -112,7 +119,7 @@ func (gc *generateCmd) generateADOMatrix() map[string]map[string]string {
 		matrix[sanitizeJobName(&retag)] = map[string]string{
 			"source":      retag.Source,
 			"destination": retag.Destination,
-			"tags":        strings.Join(retag.Tags, ","),
+			"tag":         retag.Tag,
 		}
 	}
 
@@ -130,7 +137,7 @@ func (gc *generateCmd) load(file string) ([]byte, error) {
 
 // parse parses the yaml data and returns a list of retags.
 func (gc *generateCmd) parse(filebytes []byte) ([]Retag, error) {
-	var config RetagConfig
+	var config Retags
 	err := yaml.Unmarshal(filebytes, &config)
 	if err != nil {
 		return nil, err
@@ -147,7 +154,19 @@ func (gc *generateCmd) parse(filebytes []byte) ([]Retag, error) {
 		if retagConfig.Destination == "" {
 			retagConfig.Destination = fmt.Sprintf("%s/%s", gc.prefix, retagConfig.Source)
 		}
-		rts = append(rts, retagConfig)
+		source := retagConfig.Source
+		dest := retagConfig.Destination
+		if dest == "" {
+			dest = fmt.Sprintf("%s/%s", gc.prefix, retagConfig.Source)
+		}
+		for _, tag := range retagConfig.Tags {
+			retag := Retag{
+				Source:      source,
+				Destination: dest,
+				Tag:         tag,
+			}
+			rts = append(rts, retag)
+		}
 	}
 	return rts, err
 }
@@ -162,5 +181,5 @@ func sanitizeJobName(retag *Retag) string {
 	// add a suffix to the job name in case the image is being
 	// retagged to both public/ and unlisted/ mcr repositories
 	suffix := strings.Split(retag.Destination, "/")[0]
-	return strings.Join([]string{jobName, suffix}, "_")
+	return strings.Join([]string{jobName, suffix, retag.Tag}, "_")
 }
