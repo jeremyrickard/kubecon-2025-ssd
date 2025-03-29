@@ -21,6 +21,7 @@ jobs:
           matrix=$(kubecon-2025-ssd retag generate -c retag.yml)
           echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
   retag:
+    name: "Retag ${{ matrix.name }}"
     environment: testing
     needs: generate-matrix
     runs-on: ubuntu-latest
@@ -35,5 +36,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Print the retag option
         run: |
-          echo "hello"
+          echo "Source: ${{ matrix.source}}"
+          echo "Destination: ${{ matrix.destination}}"
+          echo "Tags: ${{ matrix.tags }}"
       

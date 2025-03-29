@@ -24,6 +24,7 @@ type RetagConfig struct {
 }
 
 type Retag struct {
+	Name        string   `yaml:"name"`
 	Source      string   `yaml:"source"`
 	Destination string   `yaml:"destination"`
 	Tags        []string `yaml:"tags"`
@@ -93,7 +94,12 @@ func (gc *generateCmd) run(_ *cobra.Command, _ []string) error {
 func (gc *generateCmd) generateGithubMatrix() RetagMatrix {
 	matrix := RetagMatrix{}
 	entries := []Retag{}
-	entries = append(entries, gc.retags...)
+	for _, retag := range gc.retags {
+		retag := retag
+		name := sanitizeJobName(&retag)
+		retag.Name = name
+		entries = append(entries, retag)
+	}
 	matrix["retags"] = entries
 	return matrix
 }
