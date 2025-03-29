@@ -17,6 +17,8 @@ const (
 This allows us to spawn a retag job per repository allowing us to scale the retag workflow horizontally`
 )
 
+type RetagMatrix map[string][]Retag
+
 type RetagConfig struct {
 	Images []Retag `yaml:"images"`
 }
@@ -88,16 +90,11 @@ func (gc *generateCmd) run(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (gc *generateCmd) generateGithubMatrix() []map[string]string {
-	matrix := []map[string]string{}
-	for _, retag := range gc.retags {
-		item := map[string]string{
-			"source":      retag.Source,
-			"destination": retag.Destination,
-			"tags":        strings.Join(retag.Tags, ","),
-		}
-		matrix = append(matrix, item)
-	}
+func (gc *generateCmd) generateGithubMatrix() RetagMatrix {
+	matrix := RetagMatrix{}
+	entries := []Retag{}
+	entries = append(entries, gc.retags...)
+	matrix["retags"] = entries
 	return matrix
 }
 
