@@ -1,13 +1,13 @@
 images:
   - source: docker.io/library/alpine
-    destination: jrrickard/alpine
+    destination: mirror/docker.io/library/alpine
     tags:
       - 3.13
       - 3.14
       - 3.15
       - 3.16
   - source: docker.io/library/rust
-    destination: jrrickard/rust
+    destination: mirror/docker.io/library/rust
     tags: 
       - 1.64
       - 1.64-slim

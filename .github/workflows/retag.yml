@@ -22,7 +22,7 @@ jobs:
           echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
   retag:
     name: "Retag ${{ matrix.retags.Name }}"
-    environment: testing
+    environment: zot
     needs: generate-matrix
     runs-on: ubuntu-latest
     strategy:
@@ -33,6 +33,7 @@ jobs:
         id: docker-login
         uses: docker/login-action@v3
         with:
+          registry: ${{ vars.REGISTRY }}
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Print the retag option # now below here we should retag the images, sign them, and perhaps scan them?

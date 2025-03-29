@@ -1,0 +1,16 @@
+{
+    "version": "1.0",
+    "trustPolicies": [
+        {
+            "name": "retag-images",
+            "registryScopes": [ "zot.jeremyrickard.com/mirror/docker.io/library/rust", "zot.jeremyrickard.com/mirror/docker.io/library/alpine" ],
+            "signatureVerification": {
+                "level" : "strict" 
+            },
+            "trustStores": [ "ca:jeremyrickard.com" ],
+            "trustedIdentities": [
+                "x509.subject: CN=jeremyrickard.com,O=kubecon,L=London,ST=London,C=UK"
+            ]
+        }
+    ]
+}
