@@ -44,6 +44,6 @@ jobs:
       - name: Copy Tags to Registry # fix this so that it actually runs
         run: | 
           echo "Tag: ${{matrix.retags.Tag}}" 
-          oras copy -r ${{matrix.retags.Source}}:${{matrix.retags.Tag}} docker.io/jrrickard/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}}
+          oras copy -r ${{matrix.retags.Source}}:${{matrix.retags.Tag}} ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}}
          
       
