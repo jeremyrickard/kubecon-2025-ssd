@@ -48,6 +48,7 @@ jobs:
           read -ra tags <<< "$tagList" # Read the string into an array
           for tag in "${tags[@]}"; do
             echo "Tag: $tag"
+            oras copy -r ${{matrix.retags.Source}}:$tag docker.io/jeremyrickard/%{{matrix.retags.Destination}}:$tag
           done
 
       
