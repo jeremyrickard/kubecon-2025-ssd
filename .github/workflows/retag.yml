@@ -45,5 +45,24 @@ jobs:
         run: | 
           echo "Tag: ${{matrix.retags.Tag}}" 
           oras copy -r ${{matrix.retags.Source}}:${{matrix.retags.Tag}} ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}}
+      - name: Setup Notation CLI
+        uses: notaryproject/notation-action/setup@b6fee73110795d6793253c673bd723f12bcf9bbb
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: sign releasd artifact with notation-azure-kv plugin
+        uses: notaryproject/notation-action/sign@v1
+        with:
+          force_referrers_tag: 'false' # use referrers api first, if supported.
+          plugin_name: azure-kv
+          plugin_url: https://github.com/Azure/notation-azure-kv/releases/download/v1.2.0/notation-azure-kv_1.2.0_linux_amd64.tar.gz
+          plugin_checksum: 06bb5198af31ce11b08c4557ae4c2cbfb09878dfa6b637b7407ebc2d57b87b34
+          key_id: https://kubecon-eu-2025-akv.vault.azure.net/keys/kubecon-eu-cert/2b994508ab764f7e82936ccdc9543c7a
+          target_artifact_reference: |-
+            ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}}
+          signature_format: cose
+          plugin_config: |-
+            self_signed=true
+      
          
       
