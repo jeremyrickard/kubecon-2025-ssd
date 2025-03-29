@@ -31,6 +31,7 @@ type generateCmd struct {
 	configFile []string
 	retags     []Retag
 	prefix     string
+	mode       string
 }
 
 func newGenerateCommand() *cobra.Command {
@@ -46,6 +47,7 @@ func newGenerateCommand() *cobra.Command {
 	f := generateCmd.Flags()
 	f.StringSliceVarP(&gc.configFile, "config", "c", []string{"retag.yml"}, "Configuration used to map source repository to desination and the tags to import")
 	f.StringVarP(&gc.prefix, "prefix", "p", "mirror", "prefix to use for mapping")
+	f.StringVarP(&gc.mode, "mode", "m", "github", "the type of matrix to generate")
 	_ = generateCmd.MarkFlagRequired("config")
 	return generateCmd
 }
@@ -70,8 +72,15 @@ func (gc *generateCmd) validate(_ *cobra.Command, _ []string) error {
 }
 
 func (gc *generateCmd) run(_ *cobra.Command, _ []string) error {
-	matrix := gc.generateMatrix()
-	data, err := json.Marshal(matrix)
+	var data []byte
+	var err error
+	if gc.mode == "github" {
+		matrix := gc.generateGithubMatrix()
+		data, err = json.Marshal(matrix)
+	} else {
+		matrix := gc.generateADOMatrix()
+		data, err = json.Marshal(matrix)
+	}
 	if err != nil {
 		return err
 	}
@@ -79,8 +88,21 @@ func (gc *generateCmd) run(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
+func (gc *generateCmd) generateGithubMatrix() []map[string]string {
+	matrix := []map[string]string{}
+	for _, retag := range gc.retags {
+		item := map[string]string{
+			"source":      retag.Source,
+			"destination": retag.Destination,
+			"tags":        strings.Join(retag.Tags, ","),
+		}
+		matrix = append(matrix, item)
+	}
+	return matrix
+}
+
 // generateMatrix generates the matrix variable for the retag workflow.
-func (gc *generateCmd) generateMatrix() map[string]map[string]string {
+func (gc *generateCmd) generateADOMatrix() map[string]map[string]string {
 	matrix := make(map[string]map[string]string)
 	for _, retag := range gc.retags {
 		retag := retag

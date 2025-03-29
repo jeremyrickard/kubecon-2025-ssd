@@ -80,7 +80,7 @@ func Test_generateCmd_generateMatrix(t *testing.T) {
 			gc := &generateCmd{
 				retags: tt.fields.retags,
 			}
-			if got := gc.generateMatrix(); !reflect.DeepEqual(got, tt.want) {
+			if got := gc.generateADOMatrix(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("generateCmd.generateMatrix() = %v, want %v", got, tt.want)
 			}
 		})
