@@ -36,7 +36,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Print the retag option # now below here we should retag the images, sign them, and perhaps scan them?
         run: | # this doesn't actually appear to get the matrix value.....
-          echo "Matrix: ${{ matrix }}"
+          echo "Matrix: ${{ toJSON(matrix) }}"
           echo "Source: ${{ matrix.source}}"
           echo "Destination: ${{ matrix.destination}}"
           echo "Tags: ${{ matrix.tags }}"
