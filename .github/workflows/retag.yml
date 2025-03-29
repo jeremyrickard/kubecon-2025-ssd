@@ -21,7 +21,7 @@ jobs:
           matrix=$(kubecon-2025-ssd retag generate -c retag.yml)
           echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
   retag:
-    name: "Retag ${{ matrix.name }}"
+    name: "Retag ${{ matrix.retags.Name }}"
     environment: testing
     needs: generate-matrix
     runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
       - name: Print the retag option # now below here we should retag the images, sign them, and perhaps scan them?
         run: | # this doesn't actually appear to get the matrix value.....
           echo "Matrix: ${{ toJSON(matrix) }}"
-          echo "Source: ${{ matrix.source}}"
-          echo "Destination: ${{ matrix.destination}}"
-          echo "Tags: ${{ matrix.tags }}"
+          echo "Source: ${{ matrix.retags.Source}}"
+          echo "Destination: ${{ matrix.retags.Destination}}"
+          echo "Tags: ${{ matrix.retags.Tags }}"
       
