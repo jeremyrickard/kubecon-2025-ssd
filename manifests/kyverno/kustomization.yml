@@ -1,0 +1,13 @@
+resources:
+- kyverno.yml
+images:
+- name: ghcr.io/kyverno/kyvernopre
+  newName: jrrickard/kyvernopre
+- name: ghcr.io/kyverno/kyverno
+  newName: jrrickard/kyverno
+- name: ghcr.io/kyverno/cleanup-controller
+  newName: jrrickard/cleanup-controller
+- name: ghcr.io/kyverno/reports-controller
+  newName: jrrickard/reports-controller
+- name: bitnami/kubectl
+  newName: jrrickard/kubectl
