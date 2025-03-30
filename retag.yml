@@ -1,14 +1,14 @@
 images:
-  - source: docker.l5d.io/buoyantio/emojivoto-web
-    destination: mirror/docker.l5d.io/buoyantio/emojivoto-web
+  - source:  docker.io/buoyantio/emojivoto-web
+    destination: mirror/docker.io/buoyantio/emojivoto-web
     tags:
       - v11
-  - source: docker.l5d.io/buoyantio/emojivoto-voting-svc
-    destination: mirror/docker.l5d.io/buoyantio/emojivoto-voting-svc
+  - source: docker.io/buoyantio/emojivoto-voting-svc
+    destination: mirror/docker.io/buoyantio/emojivoto-voting-svc
     tags: 
       - v11
-  - source: docker.l5d.io/buoyantio/emojivoto-emoji-svc
-    destination: mirror/docker.l5d.io/buoyantio/emojivoto-emoji-svc
+  - source: docker.io/buoyantio/emojivoto-emoji-svc
+    destination: mirror/docker.io/buoyantio/buoyantio/emojivoto-emoji-svc
     tags: 
       - v11
   - source: ghcr.io/fluxcd/helm-controller
@@ -38,7 +38,7 @@ images:
   - source: registry.k8s.io/ingress-nginx/kube-webhook-certgen
     destination: mirror/registry.k8s.io/ingress-nginx/kube-webhook-certgen
     tags:
-      - v1.12.1
+      - v1.5.2
   - source: registry.k8s.io/ingress-nginx/controller
     destination: mirror/registry.k8s.io/ingress-nginx/controller
     tags:
@@ -59,8 +59,8 @@ images:
     destination: mirror/ghcr.io/kyverno/reports-controller
     tags:
       - v1.11.1
-  - source: bitnami/kubectl
-    destination: mirror/bitnami/kubectl
+  - source: docker.io/bitnami/kubectl
+    destination: mirror/docker.io/bitnami/kubectl
     tags:
       - 1.26.4
       - 1.26.10
