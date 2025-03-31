@@ -26,8 +26,8 @@ helm install kyverno kyverno/kyverno -n kyverno --create-namespace \
   --set policyReportsCleanup.image.repository=mirror/docker.io/bitnami/kubectl \
   --set crd.image.repository=mirror/ghcr.io/kyverno/kyverno-cli \
   --set test.image.repository=mirror/docker.io/library/busybox \
-  --set initContainer.image.repository=mirror/ghcr.io/kyverno/kyvernopre \
-  --set container.image.repository=mirror/ghcr.io/kyverno/kyverno \
+  --set admissionController.initContainer.image.repository=mirror/ghcr.io/kyverno/kyvernopre \
+  --set admissionController.container.image.repository=mirror/ghcr.io/kyverno/kyverno \
   --set cleanupController.image.repository=mirror/ghcr.io/kyverno/cleanup-controller \
   --set backgroundController.image.repository=mirror/ghcr.io/kyverno/background-controller \
   --set reportsController.image.repository=mirror/ghcr.io/kyverno/reports-controller
