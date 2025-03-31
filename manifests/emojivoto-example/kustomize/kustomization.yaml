@@ -13,6 +13,7 @@ commonAnnotations:
 resources:
 - ns.yml
 - web.yml
+- ingress.yml
 - emoji.yml
 - voting.yml
 - vote-bot.yml

@@ -32,3 +32,8 @@ helm install kyverno kyverno/kyverno -n kyverno --create-namespace \
   --set backgroundController.image.repository=mirror/ghcr.io/kyverno/background-controller \
   --set reportsController.image.repository=mirror/ghcr.io/kyverno/reports-controller
 
+
+kubectl apply -f manifests/policies/restrict-images.yml
+kubectl describe ClusterPolicy restrict-image-registries
+
+kubectl apply -k manifests/flux

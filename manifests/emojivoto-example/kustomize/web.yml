@@ -51,7 +51,7 @@ metadata:
   name: web-svc
   namespace: emojivoto
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: web-svc
   ports:
