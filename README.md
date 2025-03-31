@@ -19,4 +19,16 @@ Make a SP
 https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-service-principal-portal
 
 
+Install Kyverno with Helm
+helm install kyverno kyverno/kyverno -n kyverno --create-namespace \
+  --set global.image.registry=zot.jeremyrickard.com \
+  --set webhooksCleanup.image.repository=mirror/docker.io/bitnami/kubectl  \
+  --set policyReportsCleanup.image.repository=mirror/docker.io/bitnami/kubectl \
+  --set crd.image.repository=mirror/ghcr.io/kyverno/kyverno-cli \
+  --set test.image.repository=mirror/docker.io/library/busybox \
+  --set initContainer.image.repository=mirror/ghcr.io/kyverno/kyvernopre \
+  --set container.image.repository=mirror/ghcr.io/kyverno/kyverno \
+  --set cleanupController.image.repository=mirror/ghcr.io/kyverno/cleanup-controller \
+  --set backgroundController.image.repository=mirror/ghcr.io/kyverno/background-controller \
+  --set reportsController.image.repository=mirror/ghcr.io/kyverno/reports-controller
 
