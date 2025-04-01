@@ -80,6 +80,7 @@ jobs:
         run: | 
            report_file="report.json" 
            vuln_count=$(jq 'if .Results then [.Results[] | select(.Class=="os-pkgs" and .Vulnerabilities!=null) | .Vulnerabilities[]] | length else 0 end' "$report_file") 
+           oras attach --artifact-type vnd/trivy-scan ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}} report.json
            echo "vuln_count=$vuln_count" >> $GITHUB_OUTPUT 
       - name: Run Copa action 
         if: steps.vuln_count.outputs.vuln_count != '0' 
@@ -97,7 +98,9 @@ jobs:
            output: vex.json # optional 
            format: "openvex" # optional, default is openvex
       - name: Push the patched image
+        if: steps.copa.conclusion == 'success' 
         run: |
+          docker tag ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:patched ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}}-patched
           docker push ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}}-patched
       
          
