@@ -17,20 +17,31 @@ const (
 This allows us to spawn a retag job per repository allowing us to scale the retag workflow horizontally`
 )
 
-type RetagConfig struct {
-	Images []Retag `yaml:"images"`
+type RetagMatrix map[string][]Retag
+
+type Retags struct {
+	Images []RetagConfig `yaml:"images"`
 }
 
-type Retag struct {
+type RetagConfig struct {
+	Name        string   `yaml:"name"`
 	Source      string   `yaml:"source"`
 	Destination string   `yaml:"destination"`
 	Tags        []string `yaml:"tags"`
+}
+
+type Retag struct {
+	Name        string `yaml:"name"`
+	Source      string `yaml:"source"`
+	Destination string `yaml:"destination"`
+	Tag         string `yaml:"tag"`
 }
 
 type generateCmd struct {
 	configFile []string
 	retags     []Retag
 	prefix     string
+	mode       string
 }
 
 func newGenerateCommand() *cobra.Command {
@@ -46,6 +57,7 @@ func newGenerateCommand() *cobra.Command {
 	f := generateCmd.Flags()
 	f.StringSliceVarP(&gc.configFile, "config", "c", []string{"retag.yml"}, "Configuration used to map source repository to desination and the tags to import")
 	f.StringVarP(&gc.prefix, "prefix", "p", "mirror", "prefix to use for mapping")
+	f.StringVarP(&gc.mode, "mode", "m", "github", "the type of matrix to generate")
 	_ = generateCmd.MarkFlagRequired("config")
 	return generateCmd
 }
@@ -70,8 +82,15 @@ func (gc *generateCmd) validate(_ *cobra.Command, _ []string) error {
 }
 
 func (gc *generateCmd) run(_ *cobra.Command, _ []string) error {
-	matrix := gc.generateMatrix()
-	data, err := json.Marshal(matrix)
+	var data []byte
+	var err error
+	if gc.mode == "github" {
+		matrix := gc.generateGithubMatrix()
+		data, err = json.Marshal(matrix)
+	} else {
+		matrix := gc.generateADOMatrix()
+		data, err = json.Marshal(matrix)
+	}
 	if err != nil {
 		return err
 	}
@@ -79,15 +98,28 @@ func (gc *generateCmd) run(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
+func (gc *generateCmd) generateGithubMatrix() RetagMatrix {
+	matrix := RetagMatrix{}
+	entries := []Retag{}
+	for _, retag := range gc.retags {
+		retag := retag
+		name := sanitizeJobName(&retag)
+		retag.Name = name
+		entries = append(entries, retag)
+	}
+	matrix["retags"] = entries
+	return matrix
+}
+
 // generateMatrix generates the matrix variable for the retag workflow.
-func (gc *generateCmd) generateMatrix() map[string]map[string]string {
+func (gc *generateCmd) generateADOMatrix() map[string]map[string]string {
 	matrix := make(map[string]map[string]string)
 	for _, retag := range gc.retags {
 		retag := retag
 		matrix[sanitizeJobName(&retag)] = map[string]string{
 			"source":      retag.Source,
 			"destination": retag.Destination,
-			"tags":        strings.Join(retag.Tags, ","),
+			"tag":         retag.Tag,
 		}
 	}
 
@@ -105,7 +137,7 @@ func (gc *generateCmd) load(file string) ([]byte, error) {
 
 // parse parses the yaml data and returns a list of retags.
 func (gc *generateCmd) parse(filebytes []byte) ([]Retag, error) {
-	var config RetagConfig
+	var config Retags
 	err := yaml.Unmarshal(filebytes, &config)
 	if err != nil {
 		return nil, err
@@ -122,7 +154,19 @@ func (gc *generateCmd) parse(filebytes []byte) ([]Retag, error) {
 		if retagConfig.Destination == "" {
 			retagConfig.Destination = fmt.Sprintf("%s/%s", gc.prefix, retagConfig.Source)
 		}
-		rts = append(rts, retagConfig)
+		source := retagConfig.Source
+		dest := retagConfig.Destination
+		if dest == "" {
+			dest = fmt.Sprintf("%s/%s", gc.prefix, retagConfig.Source)
+		}
+		for _, tag := range retagConfig.Tags {
+			retag := Retag{
+				Source:      source,
+				Destination: dest,
+				Tag:         tag,
+			}
+			rts = append(rts, retag)
+		}
 	}
 	return rts, err
 }
@@ -137,5 +181,5 @@ func sanitizeJobName(retag *Retag) string {
 	// add a suffix to the job name in case the image is being
 	// retagged to both public/ and unlisted/ mcr repositories
 	suffix := strings.Split(retag.Destination, "/")[0]
-	return strings.Join([]string{jobName, suffix}, "_")
+	return strings.Join([]string{jobName, suffix, retag.Tag}, "_")
 }

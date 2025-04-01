@@ -33,15 +33,25 @@ func Test_generateCmd_generateMatrix(t *testing.T) {
 					{
 						Source:      "source/test_repo-hello.123",
 						Destination: "unlisted/destination/test_repo-hello.123",
-						Tags:        []string{"tag1", "tag2"},
+						Tag:         "tag1",
+					},
+					{
+						Source:      "source/test_repo-hello.123",
+						Destination: "unlisted/destination/test_repo-hello.123",
+						Tag:         "tag2",
 					},
 				},
 			},
 			want: map[string]map[string]string{
-				"source_test_repo_hello_123_unlisted": {
+				"source_test_repo_hello_123_unlisted_tag1": {
 					"source":      "source/test_repo-hello.123",
 					"destination": "unlisted/destination/test_repo-hello.123",
-					"tags":        "tag1,tag2",
+					"tag":         "tag1",
+				},
+				"source_test_repo_hello_123_unlisted_tag2": {
+					"source":      "source/test_repo-hello.123",
+					"destination": "unlisted/destination/test_repo-hello.123",
+					"tag":         "tag2",
 				},
 			},
 		},
@@ -52,25 +62,45 @@ func Test_generateCmd_generateMatrix(t *testing.T) {
 					{
 						Source:      "source/test_repo-hello.123",
 						Destination: "unlisted/destination/test_repo-hello.123",
-						Tags:        []string{"tag1", "tag2"},
+						Tag:         "tag1",
+					},
+					{
+						Source:      "source/test_repo-hello.123",
+						Destination: "unlisted/destination/test_repo-hello.123",
+						Tag:         "tag2",
 					},
 					{
 						Source:      "source/test_repo-hello.456",
 						Destination: "public/destination/test_repo-hello.456",
-						Tags:        []string{"tag3", "tag4"},
+						Tag:         "tag3",
+					},
+					{
+						Source:      "source/test_repo-hello.456",
+						Destination: "public/destination/test_repo-hello.456",
+						Tag:         "tag4",
 					},
 				},
 			},
 			want: map[string]map[string]string{
-				"source_test_repo_hello_123_unlisted": {
+				"source_test_repo_hello_123_unlisted_tag1": {
 					"source":      "source/test_repo-hello.123",
 					"destination": "unlisted/destination/test_repo-hello.123",
-					"tags":        "tag1,tag2",
+					"tag":         "tag1",
 				},
-				"source_test_repo_hello_456_public": {
+				"source_test_repo_hello_123_unlisted_tag2": {
+					"source":      "source/test_repo-hello.123",
+					"destination": "unlisted/destination/test_repo-hello.123",
+					"tag":         "tag2",
+				},
+				"source_test_repo_hello_456_public_tag3": {
 					"source":      "source/test_repo-hello.456",
 					"destination": "public/destination/test_repo-hello.456",
-					"tags":        "tag3,tag4",
+					"tag":         "tag3",
+				},
+				"source_test_repo_hello_456_public_tag4": {
+					"source":      "source/test_repo-hello.456",
+					"destination": "public/destination/test_repo-hello.456",
+					"tag":         "tag4",
 				},
 			},
 		},
@@ -80,7 +110,7 @@ func Test_generateCmd_generateMatrix(t *testing.T) {
 			gc := &generateCmd{
 				retags: tt.fields.retags,
 			}
-			if got := gc.generateMatrix(); !reflect.DeepEqual(got, tt.want) {
+			if got := gc.generateADOMatrix(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("generateCmd.generateMatrix() = %v, want %v", got, tt.want)
 			}
 		})
@@ -101,12 +131,32 @@ func Test_parse(t *testing.T) {
 				{
 					Source:      "docker.io/library/alpine",
 					Destination: "mirror/docker.io/library/alpine",
-					Tags:        []string{"3.13", "3.14", "3.15", "3.16"},
+					Tag:         "3.13",
+				},
+				{
+					Source:      "docker.io/library/alpine",
+					Destination: "mirror/docker.io/library/alpine",
+					Tag:         "3.14",
+				},
+				{
+					Source:      "docker.io/library/alpine",
+					Destination: "mirror/docker.io/library/alpine",
+					Tag:         "3.15",
+				},
+				{
+					Source:      "docker.io/library/alpine",
+					Destination: "mirror/docker.io/library/alpine",
+					Tag:         "3.16",
 				},
 				{
 					Source:      "docker.io/library/rust",
 					Destination: "mirror/docker.io/library/rust",
-					Tags:        []string{"1.64", "1.64-slim"},
+					Tag:         "1.64",
+				},
+				{
+					Source:      "docker.io/library/rust",
+					Destination: "mirror/docker.io/library/rust",
+					Tag:         "1.64-slim",
 				},
 			},
 		},
