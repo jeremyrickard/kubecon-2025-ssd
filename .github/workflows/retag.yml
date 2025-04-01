@@ -101,7 +101,7 @@ jobs:
         if: steps.copa.conclusion == 'success' 
         run: |
           docker tag ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:patched ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}}-patched
-          docker push ${{ vars.REGISTRY }}/${{ matrix.retags.Destination}}:${{matrix.retags.Tag}}-patched
+          echo "we could push this and use it instead...."
       
          
       
